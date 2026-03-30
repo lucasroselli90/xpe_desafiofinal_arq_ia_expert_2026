@@ -4,6 +4,8 @@
 
 **Aluno:** Lucas Leonardi Roselli
 
+**Importante:** Nesse modulo ( diferente dos outros que fiz na XPE ) esse desafio final fiz usando a IA Generativa do ChatGTP para construir esse Readme.md, o desafio eu fiz sozinho rodando no google colab por conta, assim como ajustes necessários no código usando minha experiencia de Staff Engineer usando o exemplo passado como referencia.
+
 ---
 
 # Introdução
@@ -44,6 +46,14 @@ Para utilização do modelo Zephyr-3B, foi necessário realizar autenticação n
 
 O token foi gerado e configurado como variável secreta no Google Colab, permitindo o download e utilização do modelo pré-treinado.
 
+Token gerado abaixo:
+
+![alt text](images/create_token.png)
+
+Secret criada no notebook no google colab:
+
+![alt text](images/create_secret.png)
+
 ---
 
 ## 5. Tokenização de Texto
@@ -51,6 +61,46 @@ O token foi gerado e configurado como variável secreta no Google Colab, permiti
 Foi utilizada a biblioteca `AutoTokenizer` para transformar o texto de entrada em tokens compreensíveis pelo modelo.
 
 Durante essa etapa, foi necessário ajustar o retorno da função de tokenização, garantindo que os dados fossem convertidos corretamente em tensores compatíveis com o método `generate()` do modelo.
+
+Este foi meu codigo final, com ajuste
+
+```python
+class ChatBot:
+  def __init__(self):
+    self.history = []
+
+  def predict(self, user_input,
+              system_prompt="You are an expert analyst and provide assessment:"):
+
+    prompt = [{'role': 'user', 'content': user_input + "\n" + system_prompt + ":"}]
+
+    inputs = tokenizer.apply_chat_template(
+        prompt,
+        add_generation_prompt=True,
+        return_tensors='pt',
+    )
+
+    # CORREÇÃO
+    if not isinstance(inputs, torch.Tensor):
+        inputs = inputs["input_ids"]
+
+    tokens = model.generate(
+        inputs.to(model.device),
+        max_new_tokens=250,
+        temperature=0.8,
+        do_sample=False
+    )
+
+    response_text = tokenizer.decode(
+        tokens[0],
+        skip_special_tokens=True 
+    )
+
+    del tokens
+    torch.cuda.empty_cache()
+
+    return response_text
+```
 
 ---
 
@@ -71,6 +121,12 @@ Também foi necessário realizar ajustes no formato de entrada para evitar erros
 Foi utilizada a biblioteca Gradio para criação de uma interface gráfica simples, contendo campos de entrada e saída de texto.
 
 A interface permitiu a interação direta com o chatbot, facilitando a validação do funcionamento da aplicação.
+
+Eu fiz um ajuste tambem para ter log mais detalhados, assim descobri com mais facilidades a falta da secret, e ajuste na classe ChatBot
+
+```python
+iface.launch(debug=True)
+```
 
 ---
 
@@ -95,6 +151,27 @@ Esses problemas foram resolvidos com:
 * Configuração correta de variáveis secretas
 * Uso do parâmetro `debug=True` no Gradio
 * Ajuste no tratamento dos dados retornados pelo tokenizer
+
+## 10. Demo
+
+Exemplo #1:
+
+![alt text](images/1.png)
+
+Exemplo #2:
+
+![alt text](images/2.png)
+
+Exemplo #3:
+
+![alt text](images/3.png)
+
+Exemplo #4:
+
+Aqui foi um exemplo aumentando muito a temperatura para ser bem mais criativo, passando um prompt simples
+![alt text](images/4.png)
+
+
 
 ---
 
